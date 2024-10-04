@@ -5,3 +5,4 @@
 default_style="Default"
 x_pos=0.5
 y_pos=0.18
+disable_keyboard=true

@@ -14,6 +14,7 @@ struct tMenuConfig {
 	std::string defaultStyle = "Default";
 	float xPos = 0.5;
 	float yPos = 0.18;
+	bool disableKeyboardInput = true;
 } gConfig;
 
 int nMenuYSize = 16;
@@ -32,6 +33,8 @@ int nTempLevelCounter = 0;
 bool bMenuUp = false;
 std::string sEnterHint;
 std::string sLRScrollHint;
+std::string sSubmenuName;
+std::string sFirstSubmenuName;
 
 std::mutex mDLLExportMutex;
 struct tImportedMenu {
@@ -184,9 +187,7 @@ void EndNewMenu() {
 	nTempLevelCounter--;
 }
 
-bool bLastDrawnOptionHighlighted = false;
 bool DrawMenuOption(const tMenuOption& menu) {
-	bLastDrawnOptionHighlighted = false;
 	if (nTempLevelCounter < 0) return false;
 
 	auto menuState = &aMenuStates[nTempLevelCounter];
@@ -206,9 +207,12 @@ bool DrawMenuOption(const tMenuOption& menu) {
 
 	bool retValue = false;
 	if (selected) {
-		if (nCurrentMenuLevel == nTempLevelCounter) bLastDrawnOptionHighlighted = true;
+		if (menu.isSubmenu && nCurrentMenuLevel > nTempLevelCounter) {
+			sSubmenuName = menu.label;
+			if (nTempLevelCounter == 0) sFirstSubmenuName = menu.label;
+		}
 
-		retValue = menu.hoverOnly || nCurrentMenuLevel > nTempLevelCounter;
+		retValue = (menu.hoverOnly && nCurrentMenuLevel == nTempLevelCounter) || (!menu.hoverOnly && nCurrentMenuLevel > nTempLevelCounter);
 		if (!menu.isSubmenu && nCurrentMenuLevel > nTempLevelCounter) {
 			nCurrentMenuLevel--;
 		}
@@ -306,7 +310,7 @@ void MenuLibLoop() {
 		if (!bMenuUp) DisableKeyboardInput(false);
 	}
 	if (!bMenuUp) return;
-	DisableKeyboardInput(true);
+	if (gConfig.disableKeyboardInput) DisableKeyboardInput(true);
 
 	if (IsKeyJustPressed(VK_ESCAPE)) {
 		nCurrentMenuLevel--;
@@ -355,6 +359,8 @@ void MenuLibLoop() {
 	}
 	sEnterHint = "Select";
 	sLRScrollHint = "";
+	sSubmenuName = "";
+	sFirstSubmenuName = "";
 
 	for (auto& menu : aMenus) {
 		tMenuOption opt;
@@ -388,16 +394,24 @@ void MenuLibLoop() {
 			auto str = std::format("Menu X Position < {:.2f} >", gConfig.xPos);
 			opt.label = str.c_str();
 			opt.isSubmenu = false;
-			DrawMenuOption(opt);
-			if (bLastDrawnOptionHighlighted) {
+			opt.hoverOnly = true;
+			if (DrawMenuOption(opt)) {
 				gConfig.xPos += GetMenuMoveLR() * 0.02;
 			}
 			str = std::format("Menu Y Position < {:.2f} >", gConfig.yPos);
 			opt.label = str.c_str();
 			opt.isSubmenu = false;
-			DrawMenuOption(opt);
-			if (bLastDrawnOptionHighlighted) {
+			opt.hoverOnly = true;
+			if (DrawMenuOption(opt)) {
 				gConfig.yPos += GetMenuMoveLR() * 0.02;
+			}
+			str = std::format("Disable Keyboard Input - {}", gConfig.disableKeyboardInput);
+			opt.label = str.c_str();
+			opt.hoverOnly = false;
+			if (DrawMenuOption(opt)) {
+				if (!(gConfig.disableKeyboardInput = !gConfig.disableKeyboardInput)) {
+					DisableKeyboardInput(false);
+				}
 			}
 			EndNewMenu();
 		}
@@ -427,7 +441,9 @@ void MenuLibLoop() {
 	state.menuScroll = menuState->nMenuScroll;
 	state.menuSelectedOption = menuState->nSelectedOption;
 	state.menuSelectedOptionVisual = menuState->optionLocations[menuState->nSelectedOption];
-	state.libVersion = "FlatOut UC Menu Lib 1.0";
+	state.libVersion = "FlatOut UC Menu Lib 1.10";
+	state.submenuName = sSubmenuName.c_str();
+	state.firstSubmenuName = sFirstSubmenuName.c_str();
 	state.enterHint = sEnterHint.c_str();
 	state.lrHint = sLRScrollHint.c_str();
 	state.backHint = nCurrentMenuLevel > 0 ? "Back" : "";
@@ -504,6 +520,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			if (!style.empty()) gConfig.defaultStyle = style;
 			gConfig.xPos = config["main"]["x_pos"].value_or(0.5);
 			gConfig.yPos = config["main"]["y_pos"].value_or(0.18);
+			gConfig.disableKeyboardInput = config["main"]["disable_keyboard"].value_or(true);
 
 			NyaFO2Hooks::PlaceD3DHooks();
 			NyaFO2Hooks::aEndSceneFuncs.push_back(OnEndScene);

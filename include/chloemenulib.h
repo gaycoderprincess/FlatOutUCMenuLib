@@ -47,6 +47,8 @@ namespace ChloeMenuLib {
 		int nResY;
 		float posX;
 		float posY;
+		const char* submenuName;
+		const char* firstSubmenuName;
 	};
 
 #ifndef NYA_COMMON_NO_D3D
@@ -149,10 +151,11 @@ namespace ChloeMenuLib {
 	}
 }
 
-bool DrawMenuOption(const std::string& label, bool grayedOut = false, bool isSubmenu = true) {
+bool DrawMenuOption(const std::string& label, bool grayedOut = false, bool isSubmenu = true, bool isHover = false) {
 	ChloeMenuLib::tMenuOption menu;
 	menu.nonSelectable = grayedOut;
 	menu.string = label.c_str();
 	menu.isSubmenu = isSubmenu;
+	menu.hoverOnly = isHover;
 	return ChloeMenuLib::DrawMenuOption(menu);
 }
