@@ -37,18 +37,24 @@ namespace ChloeMenuLib {
 		const char* enterHint;
 		const char* lrHint;
 		const char* backHint;
+#ifdef NYA_COMMON_NO_D3D
+		void* g_pd3dDevice;
+#else
 		IDirect3DDevice9* g_pd3dDevice;
+#endif
 		HWND ghWnd;
 		int nResX;
 		int nResY;
 	};
 
+#ifndef NYA_COMMON_NO_D3D
 	void UpdateD3DProperties(const ChloeMenuLib::tMenuStyleState* state) {
 		g_pd3dDevice  = state->g_pd3dDevice;
 		ghWnd = state->ghWnd;
 		nResX = state->nResX;
 		nResY = state->nResY;
 	}
+#endif
 
 	void RegisterMenu(const char* label, void(*func)()) {
 		static auto funcPtr = GetFuncPtr<void(__cdecl*)(const char*, void(*)())>("ChloeMenuLib_RegisterMenu");

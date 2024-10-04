@@ -316,7 +316,10 @@ void MenuLibLoop() {
 		}
 	}
 	if (menuState->nSelectedOption < 0) menuState->nSelectedOption = menuState->nTempOptionCounter - 1;
-	if (menuState->nSelectedOption >= menuState->nTempOptionCounter) menuState->nSelectedOption = 0;
+	if (menuState->nSelectedOption >= menuState->nTempOptionCounter) {
+		menuState->nSelectedOption = 0;
+		menuState->nMenuScroll = 0;
+	}
 
 	SetMenuScroll();
 
