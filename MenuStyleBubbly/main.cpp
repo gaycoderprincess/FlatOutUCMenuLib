@@ -8,26 +8,25 @@ void HookLoop() {}
 
 bool bDeviceJustReset = false;
 
-float fMenuYTop = 0.18;
-float fMenuYBottom = 0.9;
 float fMenuLeft;
-float fMenuBorderLeft;
 float fMenuTextSize = 0.02;
 float fMenuBoxSpacing;
 
 namespace MenuStyleDefault {
-	tNyaStringData GetDefaultStringData() {
+	tNyaStringData GetDefaultStringData(const ChloeMenuLib::tMenuStyleState* state) {
 		tNyaStringData ret;
 		ret.YCenterAlign = true;
 		ret.clipMaxX = 1 - (fMenuLeft - fMenuBoxSpacing);
+		ret.clipMaxX += state->posX - 0.5;
 		return ret;
 	}
 
 	bool DrawMenuOption(const ChloeMenuLib::tMenuStyleState* state, const ChloeMenuLib::tMenuOptionDraw& opt) {
 		if (opt.y >= 0 && opt.y <= state->menuYSize && opt.level == state->menuLevel) {
-			auto data = GetDefaultStringData();
+			auto data = GetDefaultStringData(state);
 			data.x = fMenuLeft = 0.5 - (0.15 * GetAspectRatioInv());
-			data.y = fMenuYTop;
+			data.x += state->posX - 0.5;
+			data.y = state->posY;
 			data.size = fMenuTextSize;
 			data.y += data.size * opt.y;
 			data.topLevel = true;
@@ -39,8 +38,10 @@ namespace MenuStyleDefault {
 			}
 			else {
 				data.SetColor(255, 255, 255, 255);
-				data.outlinea = 255;
-				data.outlinedist = 0.05;
+				if (!opt.isHighlighted) {
+					data.outlinea = 255;
+					data.outlinedist = 0.05;
+				}
 			}
 			DrawString(data, opt.label);
 			return true;
@@ -74,49 +75,52 @@ namespace MenuStyleDefault {
 
 		static auto tex = LoadTexture("MenuStyles/MenuStyleBubbly/NyaTex.png");
 		fMenuBoxSpacing = 0.02 * GetAspectRatioInv();
-		fMenuBorderLeft = fMenuLeft - fMenuBoxSpacing;
-		DrawRectangle(fMenuBorderLeft, 1 - fMenuBorderLeft, fMenuYTop - (fMenuTextSize * 3), fMenuYTop + (fMenuTextSize * (menuBoxSize + 2)), {255,255,255,255}, 0.02, tex);
+		auto fMenuBorderLeft = fMenuLeft - fMenuBoxSpacing;
+		auto fMenuBorderRight = 1 - fMenuBorderLeft;
+		fMenuBorderLeft += state->posX - 0.5;
+		fMenuBorderRight += state->posX - 0.5;
+		DrawRectangle(fMenuBorderLeft, fMenuBorderRight, state->posY - (fMenuTextSize * 3), state->posY + (fMenuTextSize * (menuBoxSize + 2)), {255,255,255,255}, 0.02, tex);
 
 		// highlighted option
 		{
 			auto height = fMenuTextSize;
-			auto y = fMenuYTop + (fMenuTextSize * (state->menuSelectedOptionVisual - state->menuScroll));
+			auto y = state->posY + (fMenuTextSize * (state->menuSelectedOptionVisual - state->menuScroll));
 
-			DrawRectangle(fMenuBorderLeft, 1 - fMenuBorderLeft, y - (height * 0.5), y + (height * 0.5),
+			DrawRectangle(fMenuBorderLeft, fMenuBorderRight, y - (height * 0.5), y + (height * 0.5),
 						  {0, 0, 0, 127});
 		}
 
 		// top border
 		{
 			auto height = fMenuTextSize;
-			auto y = fMenuYTop + (fMenuTextSize * -2);
+			auto y = state->posY + (fMenuTextSize * -2);
 
-			DrawRectangle(fMenuBorderLeft, 1 - fMenuBorderLeft, y - (height * 0.5), y + (height * 0.5),
+			DrawRectangle(fMenuBorderLeft, fMenuBorderRight, y - (height * 0.5), y + (height * 0.5),
 						  {0, 0, 0, 127});
 		}
 
 		// hints border
 		{
 			auto height = fMenuTextSize;
-			auto y = fMenuYTop + (fMenuTextSize * (menuBoxSize + 1));
+			auto y = state->posY + (fMenuTextSize * (menuBoxSize + 1));
 
-			DrawRectangle(fMenuBorderLeft, 1 - fMenuBorderLeft, y - (height * 1.5), y + (height * 0.5),
+			DrawRectangle(fMenuBorderLeft, fMenuBorderRight, y - (height * 1.5), y + (height * 0.5),
 						  {0, 0, 0, 127});
 		}
 
 		//if (state->menuScroll > 0) {
-		//	auto data = GetDefaultStringData();
-		//	data.x = 0.5;
-		//	data.y = fMenuYTop;
+		//	auto data = GetDefaultStringData(state);
+		//	data.x = state->posX;
+		//	data.y = state->posY;
 		//	data.size = fMenuTextSize;
 		//	data.y += data.size * -1;
 		//	DrawString(data, "...");
 		//}
 		//if ((numMenuOptionsDrawn - state->menuScroll) > state->menuYSize + 1)
 		{
-			auto data = GetDefaultStringData();
-			data.x = 0.5;
-			data.y = fMenuYTop;
+			auto data = GetDefaultStringData(state);
+			data.x = state->posX;
+			data.y = state->posY;
 			data.size = fMenuTextSize;
 			data.y += data.size * (state->menuYSize + 1);
 			data.XCenterAlign = true;
@@ -125,9 +129,9 @@ namespace MenuStyleDefault {
 
 		// menu title
 		{
-			auto data = GetDefaultStringData();
-			data.x = 0.5;
-			data.y = fMenuYTop;
+			auto data = GetDefaultStringData(state);
+			data.x = state->posX;
+			data.y = state->posY;
 			data.size = fMenuTextSize;
 			data.y += data.size * -2;
 			data.XCenterAlign = true;
@@ -136,9 +140,9 @@ namespace MenuStyleDefault {
 
 		// menu prompts
 		{
-			auto data = GetDefaultStringData();
-			data.x = 0.5;
-			data.y = fMenuYTop;
+			auto data = GetDefaultStringData(state);
+			data.x = state->posX;
+			data.y = state->posY;
 			data.size = fMenuTextSize;
 			int max = menuBoxSize;
 			data.y += data.size * (max + 1);

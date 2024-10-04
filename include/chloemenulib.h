@@ -45,6 +45,8 @@ namespace ChloeMenuLib {
 		HWND ghWnd;
 		int nResX;
 		int nResY;
+		float posX;
+		float posY;
 	};
 
 #ifndef NYA_COMMON_NO_D3D
@@ -112,6 +114,12 @@ namespace ChloeMenuLib {
 
 	bool GetMoveRight() {
 		static auto funcPtr = GetFuncPtr<bool(__cdecl*)()>("ChloeMenuLib_GetMoveRight");
+		if (!funcPtr) return false;
+		return funcPtr();
+	}
+
+	int GetMoveLR() {
+		static auto funcPtr = GetFuncPtr<int(__cdecl*)()>("ChloeMenuLib_GetMoveLR");
 		if (!funcPtr) return false;
 		return funcPtr();
 	}

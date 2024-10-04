@@ -39,18 +39,22 @@ extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_AddTextInputToString(
 }
 
 extern "C" __declspec(dllexport) bool __cdecl ChloeMenuLib_GetMoveLeft() {
-	return IsKeyJustPressed(VK_LEFT);
+	return GetMenuMoveLeft();
 }
 
 extern "C" __declspec(dllexport) bool __cdecl ChloeMenuLib_GetMoveRight() {
-	return IsKeyJustPressed(VK_RIGHT);
+	return GetMenuMoveRight();
+}
+
+extern "C" __declspec(dllexport) int __cdecl ChloeMenuLib_GetMoveLR() {
+	return GetMenuMoveLR();
 }
 
 extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_BackOut() {
 	if (nCurrentMenuLevel > 0) nCurrentMenuLevel--;
 }
 
-extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_RegisterMenuStyle(const char* name, void(*func)(tMenuStyleState*)) {
+extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_RegisterMenuStyle(const char* name, void(*func)(ChloeMenuLib::tMenuStyleState*)) {
 	for (auto& style : aMenuStyles) {
 		if (style.func == func) return;
 	}

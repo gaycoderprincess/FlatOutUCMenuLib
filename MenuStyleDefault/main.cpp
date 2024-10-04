@@ -12,14 +12,12 @@ void HookLoop() {}
 
 bool bDeviceJustReset = false;
 
-float fMenuYTop = 0.18;
-
 namespace MenuStyleDefault {
 	bool DrawMenuOption(const ChloeMenuLib::tMenuStyleState* state, const ChloeMenuLib::tMenuOptionDraw& opt) {
 		if (opt.y >= 0 && opt.y <= state->menuYSize && opt.level == state->menuLevel) {
 			tNyaStringData data;
-			data.x = 0.5;
-			data.y = fMenuYTop;
+			data.x = state->posX;
+			data.y = state->posY;
 			data.size = 0.03;
 			data.y += data.size * opt.y;
 			data.XCenterAlign = true;
@@ -58,8 +56,8 @@ namespace MenuStyleDefault {
 
 		if (state->menuScroll > 0) {
 			tNyaStringData data;
-			data.x = 0.5;
-			data.y = fMenuYTop;
+			data.x = state->posX;
+			data.y = state->posY;
 			data.size = 0.03;
 			data.y += data.size * -1;
 			data.XCenterAlign = true;
@@ -67,8 +65,8 @@ namespace MenuStyleDefault {
 		}
 		if ((numMenuOptionsDrawn - state->menuScroll) > state->menuYSize + 1) {
 			tNyaStringData data;
-			data.x = 0.5;
-			data.y = fMenuYTop;
+			data.x = state->posX;
+			data.y = state->posY;
 			data.size = 0.03;
 			data.y += data.size * (state->menuYSize + 1);
 			data.XCenterAlign = true;
@@ -78,8 +76,8 @@ namespace MenuStyleDefault {
 		// menu title
 		{
 			tNyaStringData data;
-			data.x = 0.5;
-			data.y = fMenuYTop;
+			data.x = state->posX;
+			data.y = state->posY;
 			data.size = 0.03;
 			data.y += data.size * -2;
 			data.XCenterAlign = true;
@@ -89,8 +87,8 @@ namespace MenuStyleDefault {
 		// menu prompts
 		{
 			tNyaStringData data;
-			data.x = 0.5;
-			data.y = fMenuYTop;
+			data.x = state->posX;
+			data.y = state->posY;
 			data.size = 0.03;
 			int max = numMenuOptionsDrawn;
 			if (max > state->menuYSize + 1) max = state->menuYSize + 1;

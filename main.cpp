@@ -8,6 +8,13 @@
 #include "nya_commonhooklib.h"
 
 #include "fouc.h"
+#include "include/chloemenulib.h"
+
+struct tMenuConfig {
+	std::string defaultStyle = "Default";
+	float xPos = 0.5;
+	float yPos = 0.18;
+} gConfig;
 
 int nMenuYSize = 16;
 
@@ -158,43 +165,16 @@ struct tMenuOption {
 	bool isSubmenu = true;
 };
 
-struct tMenuOptionDraw {
-	std::string label;
-	int y;
-	int yAbsolute;
-	int level;
-	bool nonSelectable = false;
-	bool isHighlighted = false;
-};
-std::vector<tMenuOptionDraw> aMenuOptionsForDrawing;
-
-struct tMenuStyleState {
-	size_t size = sizeof(tMenuStyleState);
-	tMenuOptionDraw* menuOptions;
-	int numMenuOptions;
-	int menuLevel;
-	int menuYSize;
-	int menuScroll;
-	int menuSelectedOption;
-	int menuSelectedOptionVisual;
-	const char* libVersion;
-	const char* enterHint;
-	const char* lrHint;
-	const char* backHint;
-	IDirect3DDevice9* g_pd3dDevice;
-	HWND ghWnd;
-	int nResX;
-	int nResY;
-};
+std::vector<ChloeMenuLib::tMenuOptionDraw> aMenuOptionsForDrawing;
 
 struct tMenuStyleDef {
 	std::string name;
-	void(*func)(tMenuStyleState*);
+	void(*func)(ChloeMenuLib::tMenuStyleState*);
 };
 std::vector<tMenuStyleDef> aMenuStyles;
 std::vector<void(*)()> aMenuD3DResets;
 
-void(*pCurrentMenuStyle)(tMenuStyleState*) = nullptr;
+void(*pCurrentMenuStyle)(ChloeMenuLib::tMenuStyleState*) = nullptr;
 
 void BeginNewMenu() {
 	nTempLevelCounter++;
@@ -204,7 +184,9 @@ void EndNewMenu() {
 	nTempLevelCounter--;
 }
 
+bool bLastDrawnOptionHighlighted = false;
 bool DrawMenuOption(const tMenuOption& menu) {
+	bLastDrawnOptionHighlighted = false;
 	if (nTempLevelCounter < 0) return false;
 
 	auto menuState = &aMenuStates[nTempLevelCounter];
@@ -213,7 +195,7 @@ bool DrawMenuOption(const tMenuOption& menu) {
 	auto selected = menuState->nTempOptionCounter == menuState->nSelectedOption;
 	if (menu.nonSelectable) selected = false;
 
-	tMenuOptionDraw optDraw;
+	ChloeMenuLib::tMenuOptionDraw optDraw;
 	optDraw.label = menu.label;
 	optDraw.yAbsolute = menuState->nTempOptionCounterVisual;
 	optDraw.y = optDraw.yAbsolute - menuState->nMenuScroll;
@@ -224,6 +206,8 @@ bool DrawMenuOption(const tMenuOption& menu) {
 
 	bool retValue = false;
 	if (selected) {
+		if (nCurrentMenuLevel == nTempLevelCounter) bLastDrawnOptionHighlighted = true;
+
 		retValue = menu.hoverOnly || nCurrentMenuLevel > nTempLevelCounter;
 		if (!menu.isSubmenu && nCurrentMenuLevel > nTempLevelCounter) {
 			nCurrentMenuLevel--;
@@ -260,9 +244,50 @@ void LoadMenuStyles() {
 	}
 
 	for (auto& style : aMenuStyles) {
-		if (style.name == "Default") pCurrentMenuStyle = style.func;
+		if (style.name == gConfig.defaultStyle) pCurrentMenuStyle = style.func;
 	}
 	if (!pCurrentMenuStyle && !aMenuStyles.empty()) pCurrentMenuStyle = aMenuStyles[0].func;
+}
+
+CNyaTimer gTimer;
+
+bool GetMenuMoveLeft() {
+	static double fHoldMoveTimer = 0;
+	if (IsKeyPressed(VK_LEFT)) {
+		if (IsKeyJustPressed(VK_LEFT)) {
+			fHoldMoveTimer = 0;
+			return true;
+		}
+		fHoldMoveTimer += gTimer.fDeltaTime;
+		if (fHoldMoveTimer > 0.2) {
+			fHoldMoveTimer -= 0.2;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool GetMenuMoveRight() {
+	static double fHoldMoveTimer = 0;
+	if (IsKeyPressed(VK_RIGHT)) {
+		if (IsKeyJustPressed(VK_RIGHT)) {
+			fHoldMoveTimer = 0;
+			return true;
+		}
+		fHoldMoveTimer += gTimer.fDeltaTime;
+		if (fHoldMoveTimer > 0.2) {
+			fHoldMoveTimer -= 0.2;
+			return true;
+		}
+	}
+	return false;
+}
+
+int GetMenuMoveLR() {
+	int n = 0;
+	if (GetMenuMoveLeft()) n--;
+	if (GetMenuMoveRight()) n++;
+	return n;
 }
 
 void MenuLibLoop() {
@@ -273,7 +298,6 @@ void MenuLibLoop() {
 	}
 	if (!pCurrentMenuStyle) return;
 
-	static CNyaTimer gTimer;
 	gTimer.Process();
 	static double fHoldMoveTimer = 0;
 
@@ -346,15 +370,34 @@ void MenuLibLoop() {
 	if (aMenuStyles.size() > 1) {
 		BeginNewMenu();
 		tMenuOption opt;
-		opt.label = "Menu Styles";
+		opt.label = "Menu Config";
 		if (DrawMenuOption(opt)) {
 			BeginNewMenu();
-			for (auto& style : aMenuStyles) {
-				opt.label = style.name.c_str();
-				opt.isSubmenu = false;
-				if (DrawMenuOption(opt)) {
-					pCurrentMenuStyle = style.func;
+			opt.label = "Menu Styles";
+			if (DrawMenuOption(opt)) {
+				BeginNewMenu();
+				for (auto& style : aMenuStyles) {
+					opt.label = style.name.c_str();
+					opt.isSubmenu = false;
+					if (DrawMenuOption(opt)) {
+						pCurrentMenuStyle = style.func;
+					}
 				}
+				EndNewMenu();
+			}
+			auto str = std::format("Menu X Position < {:.2f} >", gConfig.xPos);
+			opt.label = str.c_str();
+			opt.isSubmenu = false;
+			DrawMenuOption(opt);
+			if (bLastDrawnOptionHighlighted) {
+				gConfig.xPos += GetMenuMoveLR() * 0.02;
+			}
+			str = std::format("Menu Y Position < {:.2f} >", gConfig.yPos);
+			opt.label = str.c_str();
+			opt.isSubmenu = false;
+			DrawMenuOption(opt);
+			if (bLastDrawnOptionHighlighted) {
+				gConfig.yPos += GetMenuMoveLR() * 0.02;
 			}
 			EndNewMenu();
 		}
@@ -376,7 +419,7 @@ void MenuLibLoop() {
 		nCurrentMenuLevel--;
 	}
 
-	tMenuStyleState state;
+	ChloeMenuLib::tMenuStyleState state;
 	state.menuOptions = &aMenuOptionsForDrawing[0];
 	state.numMenuOptions = aMenuOptionsForDrawing.size();
 	state.menuLevel = nCurrentMenuLevel;
@@ -392,6 +435,8 @@ void MenuLibLoop() {
 	state.ghWnd = ghWnd;
 	state.nResX = nResX;
 	state.nResY = nResY;
+	state.posX = gConfig.xPos;
+	state.posY = gConfig.yPos;
 	pCurrentMenuStyle(&state);
 
 	aMenuOptionsForDrawing.clear();
@@ -453,6 +498,12 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				exit(0);
 				return TRUE;
 			}
+
+			static auto config = toml::parse_file("FlatOutUCMenuLib_gcp.toml");
+			std::string style = config["main"]["default_style"].value_or("Default");
+			if (!style.empty()) gConfig.defaultStyle = style;
+			gConfig.xPos = config["main"]["x_pos"].value_or(0.5);
+			gConfig.yPos = config["main"]["y_pos"].value_or(0.18);
 
 			NyaFO2Hooks::PlaceD3DHooks();
 			NyaFO2Hooks::aEndSceneFuncs.push_back(OnEndScene);
