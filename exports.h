@@ -57,6 +57,13 @@ extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_RegisterMenuStyle(con
 	aMenuStyles.push_back({name, func});
 }
 
+extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_RegisterD3DReset(void(*func)()) {
+	for (auto& reset : aMenuD3DResets) {
+		if (reset == func) return;
+	}
+	aMenuD3DResets.push_back(func);
+}
+
 extern "C" __declspec(dllexport) int __cdecl ChloeMenuLib_GetMenuYSize() {
 	return nMenuYSize;
 }

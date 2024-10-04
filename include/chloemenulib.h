@@ -32,10 +32,23 @@ namespace ChloeMenuLib {
 		int menuYSize;
 		int menuScroll;
 		int menuSelectedOption;
+		int menuSelectedOptionVisual;
+		const char* libVersion;
 		const char* enterHint;
 		const char* lrHint;
 		const char* backHint;
+		IDirect3DDevice9* g_pd3dDevice;
+		HWND ghWnd;
+		int nResX;
+		int nResY;
 	};
+
+	void UpdateD3DProperties(const ChloeMenuLib::tMenuStyleState* state) {
+		g_pd3dDevice  = state->g_pd3dDevice;
+		ghWnd = state->ghWnd;
+		nResX = state->nResX;
+		nResY = state->nResY;
+	}
 
 	void RegisterMenu(const char* label, void(*func)()) {
 		static auto funcPtr = GetFuncPtr<void(__cdecl*)(const char*, void(*)())>("ChloeMenuLib_RegisterMenu");
@@ -113,6 +126,12 @@ namespace ChloeMenuLib {
 		static auto funcPtr = GetFuncPtr<void(__cdecl*)(int)>("ChloeMenuLib_SetMenuYSize");
 		if (!funcPtr) return;
 		return funcPtr(size);
+	}
+
+	void RegisterD3DReset(void(*func)()) {
+		static auto funcPtr = GetFuncPtr<void(__cdecl*)(void(*)())>("ChloeMenuLib_RegisterD3DReset");
+		if (!funcPtr) return;
+		return funcPtr(func);
 	}
 }
 

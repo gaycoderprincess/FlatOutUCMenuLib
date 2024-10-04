@@ -176,9 +176,15 @@ struct tMenuStyleState {
 	int menuYSize;
 	int menuScroll;
 	int menuSelectedOption;
+	int menuSelectedOptionVisual;
+	const char* libVersion;
 	const char* enterHint;
 	const char* lrHint;
 	const char* backHint;
+	IDirect3DDevice9* g_pd3dDevice;
+	HWND ghWnd;
+	int nResX;
+	int nResY;
 };
 
 struct tMenuStyleDef {
@@ -186,6 +192,7 @@ struct tMenuStyleDef {
 	void(*func)(tMenuStyleState*);
 };
 std::vector<tMenuStyleDef> aMenuStyles;
+std::vector<void(*)()> aMenuD3DResets;
 
 void(*pCurrentMenuStyle)(tMenuStyleState*) = nullptr;
 
@@ -201,6 +208,7 @@ bool DrawMenuOption(const tMenuOption& menu) {
 	if (nTempLevelCounter < 0) return false;
 
 	auto menuState = &aMenuStates[nTempLevelCounter];
+	if (menuState->nTempOptionCounter >= 512) return false;
 	menuState->optionLocations[menuState->nTempOptionCounter] = menuState->nTempOptionCounterVisual;
 	auto selected = menuState->nTempOptionCounter == menuState->nSelectedOption;
 	if (menu.nonSelectable) selected = false;
@@ -372,9 +380,15 @@ void MenuLibLoop() {
 	state.menuYSize = nMenuYSize;
 	state.menuScroll = menuState->nMenuScroll;
 	state.menuSelectedOption = menuState->nSelectedOption;
+	state.menuSelectedOptionVisual = menuState->optionLocations[menuState->nSelectedOption];
+	state.libVersion = "FlatOut UC Menu Lib 1.0";
 	state.enterHint = sEnterHint.c_str();
 	state.lrHint = sLRScrollHint.c_str();
 	state.backHint = nCurrentMenuLevel > 0 ? "Back" : "";
+	state.g_pd3dDevice = g_pd3dDevice;
+	state.ghWnd = ghWnd;
+	state.nResX = nResX;
+	state.nResY = nResY;
 	pCurrentMenuStyle(&state);
 
 	aMenuOptionsForDrawing.clear();
@@ -420,6 +434,9 @@ void OnD3DReset() {
 		UpdateD3DProperties();
 		ImGui_ImplDX9_InvalidateDeviceObjects();
 		bDeviceJustReset = true;
+	}
+	for (auto& reset : aMenuD3DResets) {
+		reset();
 	}
 }
 
