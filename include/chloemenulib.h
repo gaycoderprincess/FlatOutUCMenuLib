@@ -15,10 +15,38 @@ namespace ChloeMenuLib {
 		bool isSubmenu = true;
 	};
 
+	struct tMenuOptionDraw {
+		std::string label;
+		int y;
+		int yAbsolute;
+		int level;
+		bool nonSelectable = false;
+		bool isHighlighted = false;
+	};
+
+	struct tMenuStyleState {
+		size_t size = sizeof(tMenuStyleState);
+		tMenuOptionDraw* menuOptions;
+		int numMenuOptions;
+		int menuLevel;
+		int menuYSize;
+		int menuScroll;
+		int menuSelectedOption;
+		const char* enterHint;
+		const char* lrHint;
+		const char* backHint;
+	};
+
 	void RegisterMenu(const char* label, void(*func)()) {
 		static auto funcPtr = GetFuncPtr<void(__cdecl*)(const char*, void(*)())>("ChloeMenuLib_RegisterMenu");
 		if (!funcPtr) return;
 		funcPtr(label, func);
+	}
+
+	void RegisterMenuStyle(const char* name, void(*func)(tMenuStyleState*)) {
+		static auto funcPtr = GetFuncPtr<void(__cdecl*)(const char*, void(*)(tMenuStyleState*))>("ChloeMenuLib_RegisterMenuStyle");
+		if (!funcPtr) return;
+		funcPtr(name, func);
 	}
 
 	void SetEnterHint(const char* label) {
@@ -73,6 +101,18 @@ namespace ChloeMenuLib {
 		static auto funcPtr = GetFuncPtr<void(__cdecl*)()>("ChloeMenuLib_BackOut");
 		if (!funcPtr) return;
 		funcPtr();
+	}
+
+	int GetMenuYSize() {
+		static auto funcPtr = GetFuncPtr<int(__cdecl*)()>("ChloeMenuLib_GetMenuYSize");
+		if (!funcPtr) return 16;
+		return funcPtr();
+	}
+
+	void SetMenuYSize(int size) {
+		static auto funcPtr = GetFuncPtr<void(__cdecl*)(int)>("ChloeMenuLib_SetMenuYSize");
+		if (!funcPtr) return;
+		return funcPtr(size);
 	}
 }
 

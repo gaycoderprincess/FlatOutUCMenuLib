@@ -9,7 +9,6 @@
 
 #include "fouc.h"
 
-float fMenuYTop = 0.18;
 int nMenuYSize = 16;
 
 const int nNumMenuLevels = 128;
@@ -153,11 +152,42 @@ tMenuState* GetMenuState() {
 
 struct tMenuOption {
 	size_t size = sizeof(tMenuOption);
-	const char* string = nullptr;
+	const char* label = nullptr;
 	bool hoverOnly = false;
 	bool nonSelectable = false;
 	bool isSubmenu = true;
 };
+
+struct tMenuOptionDraw {
+	std::string label;
+	int y;
+	int yAbsolute;
+	int level;
+	bool nonSelectable = false;
+	bool isHighlighted = false;
+};
+std::vector<tMenuOptionDraw> aMenuOptionsForDrawing;
+
+struct tMenuStyleState {
+	size_t size = sizeof(tMenuStyleState);
+	tMenuOptionDraw* menuOptions;
+	int numMenuOptions;
+	int menuLevel;
+	int menuYSize;
+	int menuScroll;
+	int menuSelectedOption;
+	const char* enterHint;
+	const char* lrHint;
+	const char* backHint;
+};
+
+struct tMenuStyleDef {
+	std::string name;
+	void(*func)(tMenuStyleState*);
+};
+std::vector<tMenuStyleDef> aMenuStyles;
+
+void(*pCurrentMenuStyle)(tMenuStyleState*) = nullptr;
 
 void BeginNewMenu() {
 	nTempLevelCounter++;
@@ -169,31 +199,21 @@ void EndNewMenu() {
 
 bool DrawMenuOption(const tMenuOption& menu) {
 	if (nTempLevelCounter < 0) return false;
-	if (nCurrentMenuLevel < nTempLevelCounter) return false;
 
 	auto menuState = &aMenuStates[nTempLevelCounter];
 	menuState->optionLocations[menuState->nTempOptionCounter] = menuState->nTempOptionCounterVisual;
 	auto selected = menuState->nTempOptionCounter == menuState->nSelectedOption;
 	if (menu.nonSelectable) selected = false;
-	int scroll = menuState->nTempOptionCounterVisual - menuState->nMenuScroll;
-	if (scroll >= 0 && scroll <= nMenuYSize && nTempLevelCounter == nCurrentMenuLevel) {
-		tNyaStringData data;
-		data.x = 0.5;
-		data.y = fMenuYTop;
-		data.size = 0.03;
-		data.y += data.size * scroll;
-		data.XCenterAlign = true;
-		if (selected) {
-			data.SetColor(241, 193, 45, 255);
-		}
-		else if (menu.nonSelectable) {
-			data.SetColor(255, 255, 255, 255);
-		}
-		else {
-			data.SetColor(127, 127, 127, 255);
-		}
-		DrawStringFO2(data, menu.string);
-	}
+
+	tMenuOptionDraw optDraw;
+	optDraw.label = menu.label;
+	optDraw.yAbsolute = menuState->nTempOptionCounterVisual;
+	optDraw.y = optDraw.yAbsolute - menuState->nMenuScroll;
+	optDraw.level = nTempLevelCounter;
+	optDraw.nonSelectable = menu.nonSelectable;
+	optDraw.isHighlighted = selected;
+	aMenuOptionsForDrawing.push_back(optDraw);
+
 	bool retValue = false;
 	if (selected) {
 		retValue = menu.hoverOnly || nCurrentMenuLevel > nTempLevelCounter;
@@ -210,12 +230,6 @@ void DisableKeyboardInput(bool disable) {
 	NyaHookLib::Patch<uint64_t>(0x5AEB2F, disable ? 0x68A190000001BCE9 : 0x68A1000001BB8C0F);
 }
 
-void ResetMenuScroll() {
-	auto menu = GetMenuState();
-	menu->nMenuScroll = 0;
-	menu->nSelectedOption = 0;
-}
-
 void SetMenuScroll() {
 	auto menu = GetMenuState();
 	int tmp = menu->nMenuScroll + nMenuYSize;
@@ -228,7 +242,29 @@ void SetMenuScroll() {
 	}
 }
 
+void LoadMenuStyles() {
+	for (const auto& entry : std::filesystem::directory_iterator("MenuStyles")) {
+		if (entry.is_directory()) continue;
+
+		const auto& path = entry.path();
+		if (path.extension() != ".dll") continue;
+		LoadLibraryW(path.c_str());
+	}
+
+	for (auto& style : aMenuStyles) {
+		if (style.name == "Default") pCurrentMenuStyle = style.func;
+	}
+	if (!pCurrentMenuStyle && !aMenuStyles.empty()) pCurrentMenuStyle = aMenuStyles[0].func;
+}
+
 void MenuLibLoop() {
+	static bool bOnce = true;
+	if (bOnce) {
+		LoadMenuStyles();
+		bOnce = false;
+	}
+	if (!pCurrentMenuStyle) return;
+
 	static CNyaTimer gTimer;
 	gTimer.Process();
 	static double fHoldMoveTimer = 0;
@@ -287,7 +323,7 @@ void MenuLibLoop() {
 
 	for (auto& menu : aMenus) {
 		tMenuOption opt;
-		opt.string = menu.label.c_str();
+		opt.label = menu.label.c_str();
 		BeginNewMenu();
 		if (DrawMenuOption(opt)) {
 			menu.pFunction();
@@ -296,10 +332,29 @@ void MenuLibLoop() {
 		nTempLevelCounter = -1;
 	}
 
+	if (aMenuStyles.size() > 1) {
+		BeginNewMenu();
+		tMenuOption opt;
+		opt.label = "Menu Styles";
+		if (DrawMenuOption(opt)) {
+			BeginNewMenu();
+			for (auto& style : aMenuStyles) {
+				opt.label = style.name.c_str();
+				opt.isSubmenu = false;
+				if (DrawMenuOption(opt)) {
+					pCurrentMenuStyle = style.func;
+				}
+			}
+			EndNewMenu();
+		}
+		EndNewMenu();
+	}
+
+	menuState = GetMenuState();
 	if (menuState->nTempOptionCounterVisual == 0 && nCurrentMenuLevel == 0) {
 		BeginNewMenu();
 		tMenuOption opt;
-		opt.string = "There doesn't seem to be anything here...";
+		opt.label = "There doesn't seem to be anything here...";
 		opt.isSubmenu = false;
 		DrawMenuOption(opt);
 		sEnterHint = "";
@@ -310,58 +365,19 @@ void MenuLibLoop() {
 		nCurrentMenuLevel--;
 	}
 
-	if (menuState->nMenuScroll > 0) {
-		tNyaStringData data;
-		data.x = 0.5;
-		data.y = fMenuYTop;
-		data.size = 0.03;
-		data.y += data.size * -1;
-		data.XCenterAlign = true;
-		DrawStringFO2(data, "...");
-	}
-	if ((menuState->nTempOptionCounterVisual - menuState->nMenuScroll) > nMenuYSize + 1) {
-		tNyaStringData data;
-		data.x = 0.5;
-		data.y = fMenuYTop;
-		data.size = 0.03;
-		data.y += data.size * (nMenuYSize + 1);
-		data.XCenterAlign = true;
-		DrawStringFO2(data, "...");
-	}
+	tMenuStyleState state;
+	state.menuOptions = &aMenuOptionsForDrawing[0];
+	state.numMenuOptions = aMenuOptionsForDrawing.size();
+	state.menuLevel = nCurrentMenuLevel;
+	state.menuYSize = nMenuYSize;
+	state.menuScroll = menuState->nMenuScroll;
+	state.menuSelectedOption = menuState->nSelectedOption;
+	state.enterHint = sEnterHint.c_str();
+	state.lrHint = sLRScrollHint.c_str();
+	state.backHint = nCurrentMenuLevel > 0 ? "Back" : "";
+	pCurrentMenuStyle(&state);
 
-	// menu title
-	{
-		tNyaStringData data;
-		data.x = 0.5;
-		data.y = fMenuYTop;
-		data.size = 0.03;
-		data.y += data.size * -2;
-		data.XCenterAlign = true;
-		DrawStringFO2(data, "FlatOut UC Menu Lib 1.0");
-	}
-
-	// menu prompts
-	{
-		tNyaStringData data;
-		data.x = 0.5;
-		data.y = fMenuYTop;
-		data.size = 0.03;
-		int max = menuState->nTempOptionCounterVisual;
-		if (max > nMenuYSize + 1) max = nMenuYSize + 1;
-		data.y += data.size * (max + 1);
-		data.XCenterAlign = true;
-		std::string str;
-		if (nCurrentMenuLevel > 0) str += "[ESC] Back";
-		if (!sLRScrollHint.empty()) {
-			if (!str.empty()) str += " ";
-			str += "[LEFT/RIGHT] " + sLRScrollHint;
-		}
-		if (!sEnterHint.empty()) {
-			if (!str.empty()) str += " ";
-			str += "[ENTER] " + sEnterHint;
-		}
-		DrawStringFO2(data, str);
-	}
+	aMenuOptionsForDrawing.clear();
 }
 
 void HookLoop() {
@@ -407,57 +423,7 @@ void OnD3DReset() {
 	}
 }
 
-extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_RegisterMenu(const char* label, void(*func)()) {
-	mDLLExportMutex.lock();
-	for (auto& menu : aMenus) {
-		if (menu.label == label && menu.pFunction == func) {
-			mDLLExportMutex.unlock();
-			return;
-		}
-	}
-	tImportedMenu menu;
-	menu.label = label;
-	menu.pFunction = func;
-	aMenus.push_back(menu);
-	mDLLExportMutex.unlock();
-}
-
-extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_SetEnterHint(const char* label) {
-	sEnterHint = label;
-}
-
-extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_SetLRScrollHint(const char* label) {
-	sLRScrollHint = label;
-}
-
-extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_BeginNewMenu() {
-	BeginNewMenu();
-}
-
-extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_EndNewMenu() {
-	EndNewMenu();
-}
-
-extern "C" __declspec(dllexport) bool __cdecl ChloeMenuLib_DrawMenuOption(const tMenuOption* menu) {
-	if (menu->size < 11) return false;
-	return DrawMenuOption(*menu);
-}
-
-extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_AddTextInputToString(char* str, int len, bool numbersOnly) {
-	AddTextInputToString(str, len, numbersOnly);
-}
-
-extern "C" __declspec(dllexport) bool __cdecl ChloeMenuLib_GetMoveLeft() {
-	return IsKeyJustPressed(VK_LEFT);
-}
-
-extern "C" __declspec(dllexport) bool __cdecl ChloeMenuLib_GetMoveRight() {
-	return IsKeyJustPressed(VK_RIGHT);
-}
-
-extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_BackOut() {
-	if (nCurrentMenuLevel > 0) nCurrentMenuLevel--;
-}
+#include "exports.h"
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 	switch( fdwReason ) {
