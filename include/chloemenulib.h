@@ -16,7 +16,8 @@ namespace ChloeMenuLib {
 	};
 
 	struct tMenuOptionDraw {
-		std::string label;
+		const char* label;
+		const char* descLabel;
 		int y;
 		int yAbsolute;
 		int level;
