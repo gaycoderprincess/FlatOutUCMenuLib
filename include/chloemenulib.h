@@ -9,18 +9,19 @@ namespace ChloeMenuLib {
 
 	struct tMenuOption {
 		size_t size = sizeof(tMenuOption);
-		const char* string = nullptr;
+		const char* label = nullptr;
 		bool hoverOnly = false;
 		bool nonSelectable = false;
 		bool isSubmenu = true;
+		const char* description = nullptr;
 	};
 
 	struct tMenuOptionDraw {
-		const char* label;
-		const char* descLabel;
-		int y;
-		int yAbsolute;
-		int level;
+		char label[512] = "";
+		char descLabel[512] = "";
+		int y = 0;
+		int yAbsolute = 0;
+		int level = 0;
 		bool nonSelectable = false;
 		bool isHighlighted = false;
 	};
@@ -50,6 +51,7 @@ namespace ChloeMenuLib {
 		float posY;
 		const char* submenuName;
 		const char* firstSubmenuName;
+		const char* descriptionLabel;
 	};
 
 #ifndef NYA_COMMON_NO_D3D
@@ -152,10 +154,11 @@ namespace ChloeMenuLib {
 	}
 }
 
-bool DrawMenuOption(const std::string& label, bool grayedOut = false, bool isSubmenu = true, bool isHover = false) {
+bool DrawMenuOption(const std::string& label, const std::string& description = "", bool grayedOut = false, bool isSubmenu = true, bool isHover = false) {
 	ChloeMenuLib::tMenuOption menu;
 	menu.nonSelectable = grayedOut;
-	menu.string = label.c_str();
+	menu.label = label.c_str();
+	menu.description = description.c_str();
 	menu.isSubmenu = isSubmenu;
 	menu.hoverOnly = isHover;
 	return ChloeMenuLib::DrawMenuOption(menu);

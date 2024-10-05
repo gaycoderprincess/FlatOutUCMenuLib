@@ -35,6 +35,7 @@ std::string sEnterHint;
 std::string sLRScrollHint;
 std::string sSubmenuName;
 std::string sFirstSubmenuName;
+std::string sDescriptionLabel;
 
 std::mutex mDLLExportMutex;
 struct tImportedMenu {
@@ -160,14 +161,6 @@ tMenuState* GetMenuState() {
 	return &aMenuStates[nCurrentMenuLevel];
 }
 
-struct tMenuOption {
-	size_t size = sizeof(tMenuOption);
-	const char* label = nullptr;
-	bool hoverOnly = false;
-	bool nonSelectable = false;
-	bool isSubmenu = true;
-};
-
 std::vector<ChloeMenuLib::tMenuOptionDraw> aMenuOptionsForDrawing;
 
 struct tMenuStyleDef {
@@ -187,7 +180,7 @@ void EndNewMenu() {
 	nTempLevelCounter--;
 }
 
-bool DrawMenuOption(const tMenuOption& menu) {
+bool DrawMenuOption(const ChloeMenuLib::tMenuOption& menu) {
 	if (nTempLevelCounter < 0) return false;
 
 	auto menuState = &aMenuStates[nTempLevelCounter];
@@ -197,16 +190,21 @@ bool DrawMenuOption(const tMenuOption& menu) {
 	if (menu.nonSelectable) selected = false;
 
 	ChloeMenuLib::tMenuOptionDraw optDraw;
-	optDraw.label = menu.label;
 	optDraw.yAbsolute = menuState->nTempOptionCounterVisual;
 	optDraw.y = optDraw.yAbsolute - menuState->nMenuScroll;
 	optDraw.level = nTempLevelCounter;
 	optDraw.nonSelectable = menu.nonSelectable;
 	optDraw.isHighlighted = selected;
+	strcpy_s(optDraw.label, 512, menu.label);
+	if (menu.description) strcpy_s(optDraw.descLabel, 512, menu.description);
 	aMenuOptionsForDrawing.push_back(optDraw);
 
 	bool retValue = false;
 	if (selected) {
+		if (nCurrentMenuLevel >= nTempLevelCounter) {
+			sDescriptionLabel = menu.description ? menu.description : "";
+		}
+
 		if (menu.isSubmenu && nCurrentMenuLevel > nTempLevelCounter) {
 			sSubmenuName = menu.label;
 			if (nTempLevelCounter == 0) sFirstSubmenuName = menu.label;
@@ -363,10 +361,10 @@ void MenuLibLoop() {
 	sFirstSubmenuName = "";
 
 	for (auto& menu : aMenus) {
-		tMenuOption opt;
+		ChloeMenuLib::tMenuOption opt;
 		opt.label = menu.label.c_str();
 		BeginNewMenu();
-		if (DrawMenuOption(opt)) {
+		if (::DrawMenuOption(opt)) {
 			menu.pFunction();
 		}
 		EndNewMenu();
@@ -375,17 +373,17 @@ void MenuLibLoop() {
 
 	if (aMenuStyles.size() > 1) {
 		BeginNewMenu();
-		tMenuOption opt;
+		ChloeMenuLib::tMenuOption opt;
 		opt.label = "Menu Config";
-		if (DrawMenuOption(opt)) {
+		if (::DrawMenuOption(opt)) {
 			BeginNewMenu();
 			opt.label = "Menu Styles";
-			if (DrawMenuOption(opt)) {
+			if (::DrawMenuOption(opt)) {
 				BeginNewMenu();
 				for (auto& style : aMenuStyles) {
 					opt.label = style.name.c_str();
 					opt.isSubmenu = false;
-					if (DrawMenuOption(opt)) {
+					if (::DrawMenuOption(opt)) {
 						pCurrentMenuStyle = style.func;
 					}
 				}
@@ -395,20 +393,20 @@ void MenuLibLoop() {
 			opt.label = str.c_str();
 			opt.isSubmenu = false;
 			opt.hoverOnly = true;
-			if (DrawMenuOption(opt)) {
+			if (::DrawMenuOption(opt)) {
 				gConfig.xPos += GetMenuMoveLR() * 0.02;
 			}
 			str = std::format("Menu Y Position < {:.2f} >", gConfig.yPos);
 			opt.label = str.c_str();
 			opt.isSubmenu = false;
 			opt.hoverOnly = true;
-			if (DrawMenuOption(opt)) {
+			if (::DrawMenuOption(opt)) {
 				gConfig.yPos += GetMenuMoveLR() * 0.02;
 			}
 			str = std::format("Disable Keyboard Input - {}", gConfig.disableKeyboardInput);
 			opt.label = str.c_str();
 			opt.hoverOnly = false;
-			if (DrawMenuOption(opt)) {
+			if (::DrawMenuOption(opt)) {
 				if (!(gConfig.disableKeyboardInput = !gConfig.disableKeyboardInput)) {
 					DisableKeyboardInput(false);
 				}
@@ -421,10 +419,10 @@ void MenuLibLoop() {
 	menuState = GetMenuState();
 	if (menuState->nTempOptionCounterVisual == 0 && nCurrentMenuLevel == 0) {
 		BeginNewMenu();
-		tMenuOption opt;
+		ChloeMenuLib::tMenuOption opt;
 		opt.label = "There doesn't seem to be anything here...";
 		opt.isSubmenu = false;
-		DrawMenuOption(opt);
+		::DrawMenuOption(opt);
 		sEnterHint = "";
 		EndNewMenu();
 	}
@@ -444,6 +442,7 @@ void MenuLibLoop() {
 	state.libVersion = "FlatOut UC Menu Lib 1.10";
 	state.submenuName = sSubmenuName.c_str();
 	state.firstSubmenuName = sFirstSubmenuName.c_str();
+	state.descriptionLabel = sDescriptionLabel.c_str();
 	state.enterHint = sEnterHint.c_str();
 	state.lrHint = sLRScrollHint.c_str();
 	state.backHint = nCurrentMenuLevel > 0 ? "Back" : "";

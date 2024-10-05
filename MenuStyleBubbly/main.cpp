@@ -58,7 +58,11 @@ namespace MenuStyleDefault {
 			ImGui_ImplDX9_CreateDeviceObjects();
 			bDeviceJustReset = false;
 		}
-		ChloeMenuLib::SetMenuYSize(24);
+
+		const int menuSize = 24;
+
+		bool hasDescription = state->descriptionLabel && state->descriptionLabel[0];
+		ChloeMenuLib::SetMenuYSize(hasDescription ? menuSize - 1 : menuSize);
 
 		int numMenuOptionsDrawn = 0;
 		int numSelectableMenuOptionsDrawn = 0;
@@ -71,7 +75,7 @@ namespace MenuStyleDefault {
 			DrawMenuOption(state, opt);
 		}
 
-		int menuBoxSize = state->menuYSize + 1;
+		int menuBoxSize = menuSize + 2;
 
 		static auto tex = LoadTexture("MenuStyles/MenuStyleBubbly/NyaTex.png");
 		fMenuBoxSpacing = 0.02 * GetAspectRatioInv();
@@ -108,6 +112,22 @@ namespace MenuStyleDefault {
 						  {0, 0, 0, 127});
 		}
 
+		if (hasDescription) {
+			auto height = fMenuTextSize;
+			auto y = state->posY + (fMenuTextSize * (menuBoxSize - 1));
+
+			DrawRectangle(fMenuBorderLeft, fMenuBorderRight, y - (height * 0.5), y + (height * 0.5),
+						  {0, 0, 0, 127});
+
+			auto data = GetDefaultStringData(state);
+			data.x = state->posX;
+			data.y = state->posY;
+			data.size = fMenuTextSize;
+			data.y += data.size * (menuBoxSize - 1);
+			data.XCenterAlign = true;
+			DrawString(data, state->descriptionLabel);
+		}
+
 		//if (state->menuScroll > 0) {
 		//	auto data = GetDefaultStringData(state);
 		//	data.x = state->posX;
@@ -122,7 +142,7 @@ namespace MenuStyleDefault {
 			data.x = state->posX;
 			data.y = state->posY;
 			data.size = fMenuTextSize;
-			data.y += data.size * (state->menuYSize + 1);
+			data.y += data.size * menuBoxSize;
 			data.XCenterAlign = true;
 			DrawString(data, std::format("{}/{}", state->menuSelectedOption + 1, numSelectableMenuOptionsDrawn));
 		}
@@ -144,8 +164,7 @@ namespace MenuStyleDefault {
 			data.x = state->posX;
 			data.y = state->posY;
 			data.size = fMenuTextSize;
-			int max = menuBoxSize;
-			data.y += data.size * (max + 1);
+			data.y += data.size * (menuBoxSize + 1);
 			data.XCenterAlign = true;
 			std::string str;
 			if (state->backHint && state->backHint[0]) {

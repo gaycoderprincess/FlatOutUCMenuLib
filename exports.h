@@ -29,9 +29,11 @@ extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_EndNewMenu() {
 	EndNewMenu();
 }
 
-extern "C" __declspec(dllexport) bool __cdecl ChloeMenuLib_DrawMenuOption(const tMenuOption* menu) {
+extern "C" __declspec(dllexport) bool __cdecl ChloeMenuLib_DrawMenuOption(const ChloeMenuLib::tMenuOption* menu) {
 	if (menu->size < 11) return false;
-	return DrawMenuOption(*menu);
+	ChloeMenuLib::tMenuOption opt;
+	memcpy(&opt, menu, std::min(menu->size, sizeof(opt)));
+	return ::DrawMenuOption(opt);
 }
 
 extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_AddTextInputToString(char* str, int len, bool numbersOnly) {
