@@ -210,7 +210,7 @@ bool DrawMenuOption(const ChloeMenuLib::tMenuOption& menu) {
 			if (nTempLevelCounter == 0) sFirstSubmenuName = menu.label;
 		}
 
-		retValue = (menu.hoverOnly && nCurrentMenuLevel == nTempLevelCounter) || (!menu.hoverOnly && nCurrentMenuLevel > nTempLevelCounter);
+		retValue = (menu.hoverOnly && nCurrentMenuLevel >= nTempLevelCounter) || (!menu.hoverOnly && nCurrentMenuLevel > nTempLevelCounter);
 		if (!menu.isSubmenu && nCurrentMenuLevel > nTempLevelCounter) {
 			nCurrentMenuLevel--;
 		}

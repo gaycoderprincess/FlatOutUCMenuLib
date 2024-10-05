@@ -81,7 +81,7 @@ namespace MenuStyleDefault {
 			data.size = 0.03;
 			data.y += data.size * -2;
 			data.XCenterAlign = true;
-			DrawString(data, state->firstSubmenuName && state->firstSubmenuName[0] ? state->firstSubmenuName : state->libVersion);
+			DrawStringFO2(data, state->firstSubmenuName && state->firstSubmenuName[0] ? state->firstSubmenuName : state->libVersion);
 		}
 
 		// menu prompts

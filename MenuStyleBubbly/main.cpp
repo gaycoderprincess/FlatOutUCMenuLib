@@ -83,7 +83,7 @@ namespace MenuStyleDefault {
 		auto fMenuBorderRight = 1 - fMenuBorderLeft;
 		fMenuBorderLeft += state->posX - 0.5;
 		fMenuBorderRight += state->posX - 0.5;
-		DrawRectangle(fMenuBorderLeft, fMenuBorderRight, state->posY - (fMenuTextSize * 3), state->posY + (fMenuTextSize * (menuBoxSize + 2)), {255,255,255,255}, 0.02, tex);
+		DrawRectangle(fMenuBorderLeft, fMenuBorderRight, state->posY - (fMenuTextSize * 3.5), state->posY + (fMenuTextSize * (menuBoxSize + 2.5)), {255,255,255,255}, 0.02, tex);
 
 		// highlighted option
 		{
