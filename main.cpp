@@ -377,10 +377,22 @@ void MenuLibLoop() {
 		opt.label = "Menu Config";
 		if (::DrawMenuOption(opt)) {
 			BeginNewMenu();
-			opt.label = "Menu Styles";
+			opt.label = "Menu Themes";
 			if (::DrawMenuOption(opt)) {
 				BeginNewMenu();
+
+				// list the default theme first
 				for (auto& style : aMenuStyles) {
+					if (style.name != "Default") continue;
+					opt.label = style.name.c_str();
+					opt.isSubmenu = false;
+					if (::DrawMenuOption(opt)) {
+						pCurrentMenuStyle = style.func;
+					}
+				}
+
+				for (auto& style : aMenuStyles) {
+					if (style.name == "Default") continue;
 					opt.label = style.name.c_str();
 					opt.isSubmenu = false;
 					if (::DrawMenuOption(opt)) {
@@ -452,6 +464,7 @@ void MenuLibLoop() {
 	state.nResY = nResY;
 	state.posX = gConfig.xPos;
 	state.posY = gConfig.yPos;
+	state.justOpened = IsKeyJustPressed(VK_F5);
 	pCurrentMenuStyle(&state);
 
 	aMenuOptionsForDrawing.clear();

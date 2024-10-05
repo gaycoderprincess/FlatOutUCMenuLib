@@ -52,6 +52,7 @@ namespace ChloeMenuLib {
 		const char* submenuName;
 		const char* firstSubmenuName;
 		const char* descriptionLabel;
+		bool justOpened;
 	};
 
 #ifndef NYA_COMMON_NO_D3D

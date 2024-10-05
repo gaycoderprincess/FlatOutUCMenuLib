@@ -93,6 +93,7 @@ namespace MenuStyleDefault {
 			"MenuStyles/MenuStyleBubbly/CherryBlossomsLight.png",
 			"MenuStyles/MenuStyleBubbly/CherryBlossomsMagenta.png",
 			"MenuStyles/MenuStyleBubbly/CherryBlossomsDark.png",
+			"MenuStyles/MenuStyleBubbly/Tetrus.png",
 		};
 		static auto tex = LoadTexture(aTextures[texType]);
 		fMenuBoxSpacing = 0.02 * GetAspectRatioInv();
@@ -215,6 +216,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			ChloeMenuLib::RegisterMenuStyle("Bubbly Light Pink", MenuStyleDefault::Draw<0>);
 			ChloeMenuLib::RegisterMenuStyle("Bubbly Dark Magenta", MenuStyleDefault::Draw<1>);
 			ChloeMenuLib::RegisterMenuStyle("Bubbly Dark Blue", MenuStyleDefault::Draw<2>);
+			ChloeMenuLib::RegisterMenuStyle("Bubbly Tetrus", MenuStyleDefault::Draw<3>);
 			ChloeMenuLib::RegisterD3DReset(OnD3DReset);
 		} break;
 		default:
