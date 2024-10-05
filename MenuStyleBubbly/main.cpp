@@ -101,7 +101,7 @@ namespace MenuStyleDefault {
 		auto fMenuBorderRight = 1 - fMenuBorderLeft;
 		fMenuBorderLeft += state->posX - 0.5;
 		fMenuBorderRight += state->posX - 0.5;
-		DrawRectangle(fMenuBorderLeft, fMenuBorderRight, state->posY - (fMenuTextSize * 3.5), state->posY + (fMenuTextSize * (menuBoxSize + 2.5)), {255,255,255,255}, 0.02, tex);
+		DrawRectangle(fMenuBorderLeft, fMenuBorderRight, state->posY - (fMenuTextSize * 3.5), state->posY + (fMenuTextSize * (menuBoxSize + 2.5)), {255,255,255,255}, texType == 3 ? 0 : 0.02, tex);
 
 		// highlighted option
 		{
@@ -146,15 +146,6 @@ namespace MenuStyleDefault {
 			DrawString(data, state->descriptionLabel);
 		}
 
-		//if (state->menuScroll > 0) {
-		//	auto data = GetDefaultStringData(state);
-		//	data.x = state->posX;
-		//	data.y = state->posY;
-		//	data.size = fMenuTextSize;
-		//	data.y += data.size * -1;
-		//	DrawString(data, "...");
-		//}
-		//if ((numMenuOptionsDrawn - state->menuScroll) > state->menuYSize + 1)
 		{
 			auto data = GetDefaultStringData(state);
 			data.x = state->posX;
