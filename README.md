@@ -2,6 +2,8 @@
 
 A shared library for FlatOut: Ultimate Carnage in order to have multiple plugins' configurations in one global menu
 
+![preview image](https://i.imgur.com/VPZGiEA.png)
+
 ## Installation
 
 - Make sure you have the Steam GFWL version of the game, as this is the only version this plugin is compatible with. (exe size of 4242504 bytes)
