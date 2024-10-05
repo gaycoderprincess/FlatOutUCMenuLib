@@ -13,11 +13,15 @@ float fMenuTextSize = 0.02;
 float fMenuBoxSpacing;
 
 namespace MenuStyleDefault {
+	bool bDarkMode = false;
+
 	tNyaStringData GetDefaultStringData(const ChloeMenuLib::tMenuStyleState* state) {
 		tNyaStringData ret;
 		ret.YCenterAlign = true;
 		ret.clipMaxX = 1 - (fMenuLeft - fMenuBoxSpacing);
+		ret.clipMinX = fMenuLeft - fMenuBoxSpacing;
 		ret.clipMaxX += state->posX - 0.5;
+		ret.clipMinX += state->posX - 0.5;
 		return ret;
 	}
 
@@ -34,11 +38,16 @@ namespace MenuStyleDefault {
 			//	data.SetColor(255, 255, 255, 255);
 			//}
 			if (opt.nonSelectable) {
-				data.SetColor(64, 64, 64, 255);
+				if (bDarkMode) {
+					data.SetColor(200, 200, 200, 255);
+				}
+				else {
+					data.SetColor(64, 64, 64, 255);
+				}
 			}
 			else {
 				data.SetColor(255, 255, 255, 255);
-				if (!opt.isHighlighted) {
+				if (!opt.isHighlighted && !bDarkMode) {
 					data.outlinea = 255;
 					data.outlinedist = 0.05;
 				}
@@ -49,7 +58,9 @@ namespace MenuStyleDefault {
 		return false;
 	}
 
-	void Draw(ChloeMenuLib::tMenuStyleState* state) {
+	void Draw(ChloeMenuLib::tMenuStyleState* state, bool darkMode) {
+		bDarkMode = darkMode;
+
 		if (!g_pd3dDevice) {
 			ChloeMenuLib::UpdateD3DProperties(state);
 			InitHookBase();
@@ -75,15 +86,16 @@ namespace MenuStyleDefault {
 			DrawMenuOption(state, opt);
 		}
 
-		int menuBoxSize = menuSize + 2;
+		int menuBoxSize = menuSize + 1;
 
-		static auto tex = LoadTexture("MenuStyles/MenuStyleBubbly/NyaTex.png");
+		static auto texL = LoadTexture("MenuStyles/MenuStyleBubbly/NyaTex.png");
+		static auto texD = LoadTexture("MenuStyles/MenuStyleBubbly/NyaTexDark.png");
 		fMenuBoxSpacing = 0.02 * GetAspectRatioInv();
 		auto fMenuBorderLeft = fMenuLeft - fMenuBoxSpacing;
 		auto fMenuBorderRight = 1 - fMenuBorderLeft;
 		fMenuBorderLeft += state->posX - 0.5;
 		fMenuBorderRight += state->posX - 0.5;
-		DrawRectangle(fMenuBorderLeft, fMenuBorderRight, state->posY - (fMenuTextSize * 3.5), state->posY + (fMenuTextSize * (menuBoxSize + 2.5)), {255,255,255,255}, 0.02, tex);
+		DrawRectangle(fMenuBorderLeft, fMenuBorderRight, state->posY - (fMenuTextSize * 3.5), state->posY + (fMenuTextSize * (menuBoxSize + 2.5)), {255,255,255,255}, 0.02, darkMode ? texD : texL);
 
 		// highlighted option
 		{
@@ -183,6 +195,14 @@ namespace MenuStyleDefault {
 
 		CommonMain();
 	}
+
+	void DrawLight(ChloeMenuLib::tMenuStyleState* state) {
+		Draw(state, false);
+	}
+
+	void DrawDark(ChloeMenuLib::tMenuStyleState* state) {
+		Draw(state, true);
+	}
 }
 
 void OnD3DReset() {
@@ -195,7 +215,8 @@ void OnD3DReset() {
 BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 	switch( fdwReason ) {
 		case DLL_PROCESS_ATTACH: {
-			ChloeMenuLib::RegisterMenuStyle("Bubbly", MenuStyleDefault::Draw);
+			ChloeMenuLib::RegisterMenuStyle("Bubbly", MenuStyleDefault::DrawLight);
+			ChloeMenuLib::RegisterMenuStyle("Bubbly (Dark)", MenuStyleDefault::DrawDark);
 			ChloeMenuLib::RegisterD3DReset(OnD3DReset);
 		} break;
 		default:
