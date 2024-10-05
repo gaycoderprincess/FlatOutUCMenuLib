@@ -439,7 +439,7 @@ void MenuLibLoop() {
 	state.menuScroll = menuState->nMenuScroll;
 	state.menuSelectedOption = menuState->nSelectedOption;
 	state.menuSelectedOptionVisual = menuState->optionLocations[menuState->nSelectedOption];
-	state.libVersion = "FlatOut UC Menu Lib 1.10";
+	state.libVersion = "FlatOut UC Menu Lib 1.15";
 	state.submenuName = sSubmenuName.c_str();
 	state.firstSubmenuName = sFirstSubmenuName.c_str();
 	state.descriptionLabel = sDescriptionLabel.c_str();

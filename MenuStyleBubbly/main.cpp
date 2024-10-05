@@ -58,8 +58,9 @@ namespace MenuStyleDefault {
 		return false;
 	}
 
-	void Draw(ChloeMenuLib::tMenuStyleState* state, bool darkMode) {
-		bDarkMode = darkMode;
+	template<int texType>
+	void Draw(ChloeMenuLib::tMenuStyleState* state) {
+		bDarkMode = texType != 0;
 
 		if (!g_pd3dDevice) {
 			ChloeMenuLib::UpdateD3DProperties(state);
@@ -88,14 +89,18 @@ namespace MenuStyleDefault {
 
 		int menuBoxSize = menuSize + 1;
 
-		static auto texL = LoadTexture("MenuStyles/MenuStyleBubbly/NyaTex.png");
-		static auto texD = LoadTexture("MenuStyles/MenuStyleBubbly/NyaTexDark.png");
+		const char* aTextures[] = {
+			"MenuStyles/MenuStyleBubbly/CherryBlossomsLight.png",
+			"MenuStyles/MenuStyleBubbly/CherryBlossomsMagenta.png",
+			"MenuStyles/MenuStyleBubbly/CherryBlossomsDark.png",
+		};
+		static auto tex = LoadTexture(aTextures[texType]);
 		fMenuBoxSpacing = 0.02 * GetAspectRatioInv();
 		auto fMenuBorderLeft = fMenuLeft - fMenuBoxSpacing;
 		auto fMenuBorderRight = 1 - fMenuBorderLeft;
 		fMenuBorderLeft += state->posX - 0.5;
 		fMenuBorderRight += state->posX - 0.5;
-		DrawRectangle(fMenuBorderLeft, fMenuBorderRight, state->posY - (fMenuTextSize * 3.5), state->posY + (fMenuTextSize * (menuBoxSize + 2.5)), {255,255,255,255}, 0.02, darkMode ? texD : texL);
+		DrawRectangle(fMenuBorderLeft, fMenuBorderRight, state->posY - (fMenuTextSize * 3.5), state->posY + (fMenuTextSize * (menuBoxSize + 2.5)), {255,255,255,255}, 0.02, tex);
 
 		// highlighted option
 		{
@@ -195,14 +200,6 @@ namespace MenuStyleDefault {
 
 		CommonMain();
 	}
-
-	void DrawLight(ChloeMenuLib::tMenuStyleState* state) {
-		Draw(state, false);
-	}
-
-	void DrawDark(ChloeMenuLib::tMenuStyleState* state) {
-		Draw(state, true);
-	}
 }
 
 void OnD3DReset() {
@@ -215,8 +212,9 @@ void OnD3DReset() {
 BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 	switch( fdwReason ) {
 		case DLL_PROCESS_ATTACH: {
-			ChloeMenuLib::RegisterMenuStyle("Bubbly", MenuStyleDefault::DrawLight);
-			ChloeMenuLib::RegisterMenuStyle("Bubbly (Dark)", MenuStyleDefault::DrawDark);
+			ChloeMenuLib::RegisterMenuStyle("Bubbly Light Pink", MenuStyleDefault::Draw<0>);
+			ChloeMenuLib::RegisterMenuStyle("Bubbly Dark Magenta", MenuStyleDefault::Draw<1>);
+			ChloeMenuLib::RegisterMenuStyle("Bubbly Dark Blue", MenuStyleDefault::Draw<2>);
 			ChloeMenuLib::RegisterD3DReset(OnD3DReset);
 		} break;
 		default:
