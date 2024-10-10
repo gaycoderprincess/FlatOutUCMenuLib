@@ -76,6 +76,12 @@ namespace ChloeMenuLib {
 		funcPtr(name, func);
 	}
 
+	void RegisterMenuStyleWithAuthor(const char* name, const char* author, void(*func)(tMenuStyleState*)) {
+		static auto funcPtr = GetFuncPtr<void(__cdecl*)(const char*, const char*, void(*)(tMenuStyleState*))>("ChloeMenuLib_RegisterMenuStyleWithAuthor");
+		if (!funcPtr) return RegisterMenuStyle(name, func);
+		funcPtr(name, author, func);
+	}
+
 	void SetEnterHint(const char* label) {
 		static auto funcPtr = GetFuncPtr<void(__cdecl*)(const char*)>("ChloeMenuLib_SetEnterHint");
 		if (!funcPtr) return;

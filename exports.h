@@ -60,7 +60,14 @@ extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_RegisterMenuStyle(con
 	for (auto& style : aMenuStyles) {
 		if (style.func == func) return;
 	}
-	aMenuStyles.push_back({name, func});
+	aMenuStyles.push_back({name, "", func});
+}
+
+extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_RegisterMenuStyleWithAuthor(const char* name, const char* author, void(*func)(ChloeMenuLib::tMenuStyleState*)) {
+	for (auto& style : aMenuStyles) {
+		if (style.func == func) return;
+	}
+	aMenuStyles.push_back({name, "Author: " + (std::string)author, func});
 }
 
 extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_RegisterD3DReset(void(*func)()) {

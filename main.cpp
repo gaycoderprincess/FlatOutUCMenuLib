@@ -165,6 +165,7 @@ std::vector<ChloeMenuLib::tMenuOptionDraw> aMenuOptionsForDrawing;
 
 struct tMenuStyleDef {
 	std::string name;
+	std::string author;
 	void(*func)(ChloeMenuLib::tMenuStyleState*);
 };
 std::vector<tMenuStyleDef> aMenuStyles;
@@ -221,6 +222,10 @@ bool DrawMenuOption(const ChloeMenuLib::tMenuOption& menu) {
 }
 
 void DisableKeyboardInput(bool disable) {
+	// reset key status
+	if (disable) {
+		memset((void*)0x846060, 0, 0x100);
+	}
 	NyaHookLib::Patch<uint64_t>(0x5AEB2F, disable ? 0x68A190000001BCE9 : 0x68A1000001BB8C0F);
 }
 
@@ -385,6 +390,7 @@ void MenuLibLoop() {
 				for (auto& style : aMenuStyles) {
 					if (style.name != "Default") continue;
 					opt.label = style.name.c_str();
+					opt.description = style.author.c_str();
 					opt.isSubmenu = false;
 					if (::DrawMenuOption(opt)) {
 						pCurrentMenuStyle = style.func;
@@ -394,6 +400,7 @@ void MenuLibLoop() {
 				for (auto& style : aMenuStyles) {
 					if (style.name == "Default") continue;
 					opt.label = style.name.c_str();
+					opt.description = style.author.c_str();
 					opt.isSubmenu = false;
 					if (::DrawMenuOption(opt)) {
 						pCurrentMenuStyle = style.func;

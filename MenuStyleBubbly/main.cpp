@@ -204,10 +204,10 @@ void OnD3DReset() {
 BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 	switch( fdwReason ) {
 		case DLL_PROCESS_ATTACH: {
-			ChloeMenuLib::RegisterMenuStyle("Bubbly Light Pink", MenuStyleDefault::Draw<0>);
-			ChloeMenuLib::RegisterMenuStyle("Bubbly Dark Magenta", MenuStyleDefault::Draw<1>);
-			ChloeMenuLib::RegisterMenuStyle("Bubbly Dark Blue", MenuStyleDefault::Draw<2>);
-			ChloeMenuLib::RegisterMenuStyle("Bubbly Tetrus", MenuStyleDefault::Draw<3>);
+			ChloeMenuLib::RegisterMenuStyleWithAuthor("Bubbly Light Pink", "gaycoderprincess", MenuStyleDefault::Draw<0>);
+			ChloeMenuLib::RegisterMenuStyleWithAuthor("Bubbly Dark Magenta", "gaycoderprincess", MenuStyleDefault::Draw<1>);
+			ChloeMenuLib::RegisterMenuStyleWithAuthor("Bubbly Dark Blue", "gaycoderprincess", MenuStyleDefault::Draw<2>);
+			ChloeMenuLib::RegisterMenuStyleWithAuthor("Bubbly Tetrus", "gaycoderprincess", MenuStyleDefault::Draw<3>);
 			ChloeMenuLib::RegisterD3DReset(OnD3DReset);
 		} break;
 		default:
