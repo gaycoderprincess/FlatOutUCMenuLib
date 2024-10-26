@@ -159,6 +159,12 @@ namespace ChloeMenuLib {
 		if (!funcPtr) return;
 		return funcPtr(func);
 	}
+
+	bool IsMenuOpen() {
+		static auto funcPtr = GetFuncPtr<bool(__cdecl*)()>("ChloeMenuLib_IsMenuOpen");
+		if (!funcPtr) return false;
+		return funcPtr();
+	}
 }
 
 bool DrawMenuOption(const std::string& label, const std::string& description = "", bool grayedOut = false, bool isSubmenu = true, bool isHover = false) {

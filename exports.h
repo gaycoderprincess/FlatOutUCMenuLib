@@ -84,3 +84,7 @@ extern "C" __declspec(dllexport) int __cdecl ChloeMenuLib_GetMenuYSize() {
 extern "C" __declspec(dllexport) void __cdecl ChloeMenuLib_SetMenuYSize(int size) {
 	nMenuYSize = size;
 }
+
+extern "C" __declspec(dllexport) bool __cdecl ChloeMenuLib_IsMenuOpen() {
+	return bMenuUp;
+}
