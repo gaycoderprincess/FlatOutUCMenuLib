@@ -1,6 +1,9 @@
 namespace ChloeMenuLib {
 	template<typename T>
 	T GetFuncPtr(const char* funcName) {
+		if (auto dll = LoadLibraryA("FlatOut2MenuLib_gcp.dll")) {
+			return (T)GetProcAddress(dll, funcName);
+		}
 		if (auto dll = LoadLibraryA("FlatOutUCMenuLib_gcp.asi")) {
 			return (T)GetProcAddress(dll, funcName);
 		}
@@ -57,7 +60,7 @@ namespace ChloeMenuLib {
 
 #ifndef NYA_COMMON_NO_D3D
 	void UpdateD3DProperties(const ChloeMenuLib::tMenuStyleState* state) {
-		g_pd3dDevice  = state->g_pd3dDevice;
+		g_pd3dDevice = state->g_pd3dDevice;
 		ghWnd = state->ghWnd;
 		nResX = state->nResX;
 		nResY = state->nResY;
