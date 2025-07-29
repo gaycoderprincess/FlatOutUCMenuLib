@@ -1,6 +1,9 @@
 namespace ChloeMenuLib {
 	template<typename T>
 	T GetFuncPtr(const char* funcName) {
+		if (auto dll = LoadLibraryA("FlatOutMenuLib_gcp.dll")) {
+			return (T)GetProcAddress(dll, funcName);
+		}
 		if (auto dll = LoadLibraryA("FlatOut2MenuLib_gcp.dll")) {
 			return (T)GetProcAddress(dll, funcName);
 		}
