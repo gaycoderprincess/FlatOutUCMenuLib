@@ -310,7 +310,7 @@ void MenuLibLoop() {
 	if (!bMenuUp) return;
 	if (gConfig.disableKeyboardInput) DisableKeyboardInput(true);
 
-	if (IsKeyJustPressed(VK_ESCAPE)) {
+	if (IsKeyJustPressed(VK_ESCAPE) || IsKeyJustPressed(VK_BACK)) {
 		nCurrentMenuLevel--;
 		if (nCurrentMenuLevel < 0) nCurrentMenuLevel = 0;
 	}
