@@ -479,12 +479,14 @@ void HookLoop() {
 	mDLLExportMutex.unlock();
 }
 
+#ifndef NYAMENU_D3D_EXTERNAL
 void UpdateD3DProperties() {
 	g_pd3dDevice = pDeviceD3d->pD3DDevice;
 	ghWnd = pDeviceD3d->hWnd;
 	nResX = nGameResolutionX;
 	nResY = nGameResolutionY;
 }
+#endif
 
 bool bDeviceJustReset = false;
 void D3DHookMain() {
@@ -514,16 +516,20 @@ void OnD3DReset() {
 #include "exports.h"
 
 void InitAndLoadConfig(const char* configName) {
-	static auto config = toml::parse_file(configName);
-	std::string style = config["main"]["default_style"].value_or("Default");
-	if (!style.empty()) gConfig.defaultStyle = style;
-	gConfig.xPos = config["main"]["x_pos"].value_or(0.5);
-	gConfig.yPos = config["main"]["y_pos"].value_or(0.18);
-	gConfig.disableKeyboardInput = config["main"]["disable_keyboard"].value_or(true);
+	if (std::filesystem::exists(configName)) {
+		static auto config = toml::parse_file(configName);
+		std::string style = config["main"]["default_style"].value_or("Default");
+		if (!style.empty()) gConfig.defaultStyle = style;
+		gConfig.xPos = config["main"]["x_pos"].value_or(0.5);
+		gConfig.yPos = config["main"]["y_pos"].value_or(0.18);
+		gConfig.disableKeyboardInput = config["main"]["disable_keyboard"].value_or(true);
+	}
 
+#ifndef NYAMENU_D3D_EXTERNAL
 	NyaFO2Hooks::PlaceD3DHooks();
 	NyaFO2Hooks::aEndSceneFuncs.push_back(OnEndScene);
 	NyaFO2Hooks::aD3DResetFuncs.push_back(OnD3DReset);
 	NyaFO2Hooks::PlaceWndProcHook();
 	NyaFO2Hooks::aWndProcFuncs.push_back(WndProcHook);
+#endif
 }

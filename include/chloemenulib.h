@@ -1,14 +1,42 @@
+#include <filesystem>
+#include <fstream>
+
 namespace ChloeMenuLib {
 	template<typename T>
 	T GetFuncPtr(const char* funcName) {
-		if (auto dll = LoadLibraryA("FlatOutMenuLib_gcp.dll")) {
-			return (T)GetProcAddress(dll, funcName);
+		static HMODULE library = 0;
+		if (!library) {
+			const char* dllNames[] = {
+					"FlatOutMenuLib_gcp.dll",
+					"FlatOut2MenuLib_gcp.dll",
+					"FlatOutUCMenuLib_gcp.dll"
+			};
+			for (auto& dll : dllNames) {
+				if (auto lib = LoadLibraryA(dll)) {
+					library = lib;
+					break;
+				}
+			}
 		}
-		if (auto dll = LoadLibraryA("FlatOut2MenuLib_gcp.dll")) {
-			return (T)GetProcAddress(dll, funcName);
+		if (!library) {
+			auto file = "ChloeMenuLib_target.txt";
+			if (std::filesystem::exists(file) && std::filesystem::file_size(file) > 3) {
+				std::ifstream fin(file, std::ios::in);
+				if (fin.is_open()) {
+					char str[256];
+
+					const auto sz = std::filesystem::file_size(file);
+					std::string result(sz, '\0');
+					fin.read(result.data(), sz);
+
+					if (auto lib = LoadLibraryA(result.c_str())) {
+						library = lib;
+					}
+				}
+			}
 		}
-		if (auto dll = LoadLibraryA("FlatOutUCMenuLib_gcp.asi")) {
-			return (T)GetProcAddress(dll, funcName);
+		if (library != 0) {
+			return (T)GetProcAddress(library, funcName);
 		}
 		return nullptr;
 	}
