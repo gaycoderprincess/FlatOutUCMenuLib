@@ -277,14 +277,6 @@ int GetMenuMoveLR() {
 	return n;
 }
 
-void WriteLog(const std::string& str) {
-	static auto file = std::ofstream("FlatOut2MenuLib_gcp.log");
-
-	file << str;
-	file << "\n";
-	file.flush();
-}
-
 void MenuLibLoop() {
 	static bool bOnce = true;
 	if (bOnce) {
