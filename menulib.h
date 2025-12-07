@@ -1,3 +1,17 @@
+wchar_t gDLLDir[MAX_PATH];
+class DLLDirSetter {
+public:
+	wchar_t backup[MAX_PATH];
+
+	DLLDirSetter() {
+		GetCurrentDirectoryW(MAX_PATH, backup);
+		SetCurrentDirectoryW(gDLLDir);
+	}
+	~DLLDirSetter() {
+		SetCurrentDirectoryW(backup);
+	}
+};
+
 struct tMenuConfig {
 	std::string defaultStyle = "Default";
 	float xPos = 0.5;
@@ -482,6 +496,8 @@ void UpdateD3DProperties() {
 
 bool bDeviceJustReset = false;
 void D3DHookMain() {
+	DLLDirSetter _setDir;
+
 	if (!g_pd3dDevice) {
 		UpdateD3DProperties();
 		InitHookBase();
@@ -495,6 +511,8 @@ void D3DHookMain() {
 }
 
 void OnD3DReset() {
+	DLLDirSetter _setDir;
+
 	if (g_pd3dDevice) {
 		UpdateD3DProperties();
 		ImGui_ImplDX9_InvalidateDeviceObjects();
@@ -508,6 +526,8 @@ void OnD3DReset() {
 #include "exports.h"
 
 void InitAndLoadConfig(const char* configName) {
+	GetCurrentDirectoryW(MAX_PATH, gDLLDir);
+
 	if (std::filesystem::exists(configName)) {
 		static auto config = toml::parse_file(configName);
 		std::string style = config["main"]["default_style"].value_or("Default");
