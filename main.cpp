@@ -43,12 +43,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 		case DLL_PROCESS_ATTACH: {
 			DoFlatOutVersionCheck(FO2Version::FOUC_GFWL);
 
-			if (!std::filesystem::exists("MenuStyles")) {
-				MessageBoxA(nullptr, "FlatOutUCMenuLib: Failed to find any menu styles!", "nya?!~", MB_ICONERROR);
-				return TRUE;
-			}
+			if (!InitAndLoadConfig("FlatOutUCMenuLib_gcp.toml")) return TRUE;
 
-			InitAndLoadConfig("FlatOutUCMenuLib_gcp.toml");
 			NyaFO2Hooks::PlaceD3DHooks();
 			NyaFO2Hooks::aEndSceneFuncs.push_back(OnEndScene);
 			NyaFO2Hooks::aD3DResetFuncs.push_back(OnD3DReset);
