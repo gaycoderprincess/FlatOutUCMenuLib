@@ -14,6 +14,6 @@ A shared library for FlatOut: Ultimate Carnage in order to have multiple plugins
 
 Building is done on an Arch Linux system with CLion being used for the build process. 
 
-Before you begin, clone [nya-common](https://github.com/gaycoderprincess/nya-common) and [nya-common-fouc](https://github.com/gaycoderprincess/nya-common-fouc) to folders next to this one, so they can be found.
+Before you begin, clone [nya-common](https://github.com/gaycoderprincess/nya-common), [nya-common-fouc](https://github.com/gaycoderprincess/nya-common-fouc) and [CwoeeMenuLib](https://github.com/gaycoderprincess/CwoeeMenuLib) to folders next to this one, so they can be found.
 
 You should be able to build the project now in CLion.

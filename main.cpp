@@ -27,6 +27,13 @@ void OnEndScene() {
 	*(float*)0x716034 = bak;
 }
 
+void UpdateD3DProperties() {
+	g_pd3dDevice = pDeviceD3d->pD3DDevice;
+	ghWnd = pDeviceD3d->hWnd;
+	nResX = nGameResolutionX;
+	nResY = nGameResolutionY;
+}
+
 const char* versionString = "FlatOut UC Menu Lib 1.15";
 
 #include "menulib.h"
@@ -35,7 +42,13 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 	switch( fdwReason ) {
 		case DLL_PROCESS_ATTACH: {
 			DoFlatOutVersionCheck(FO2Version::FOUC_GFWL);
+
 			InitAndLoadConfig("FlatOutUCMenuLib_gcp.toml");
+			NyaFO2Hooks::PlaceD3DHooks();
+			NyaFO2Hooks::aEndSceneFuncs.push_back(OnEndScene);
+			NyaFO2Hooks::aD3DResetFuncs.push_back(OnD3DReset);
+			NyaFO2Hooks::PlaceWndProcHook();
+			NyaFO2Hooks::aWndProcFuncs.push_back(WndProcHook);
 		} break;
 		default:
 			break;
